@@ -1,3 +1,8 @@
+require('dotenv').config({
+    path: '/home/ubuntu/project/Chumbak_EBO/.env',
+    override: true
+});
+
 const puppeteer = require('puppeteer');
 const chromium = require('chromium');
 const fetch = require('node-fetch');
@@ -5,7 +10,6 @@ const { saveStreamToDatabase, closePool, deleteDateFromTable } = require('./chum
 const { Readable } = require('stream');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
 
 async function runSalesSyncV2() {
     const loginUrl = "https://chumbak.eshopaid.com/shopaid/authpages/Login.aspx";
@@ -106,7 +110,7 @@ async function runSalesSyncV2() {
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         const yyyy = d.getFullYear();
-        const yesterday = `${dd}/${mm}/${yyyy}`; 
+        const yesterday = `${dd}/${mm}/${yyyy}`;
         const dbDate = `${dd}/${mm}/${yyyy}`; // For clearing from DB
 
         // Surgical clear: only remove data for yesterday to protect history
@@ -122,12 +126,12 @@ async function runSalesSyncV2() {
 
         console.log("✅ Enabling 'All Zones' filter...");
         await reportTarget.evaluate(() => {
-            const zoneBtn = document.getElementById('chkAllZones') || 
-                          document.getElementById('chkAllZone') ||
-                          Array.from(document.querySelectorAll('input[type=\"checkbox\"]')).find(cb => {
-                              const label = cb.nextElementSibling || cb.parentElement;
-                              return label && label.textContent.includes('Zone');
-                          });
+            const zoneBtn = document.getElementById('chkAllZones') ||
+                document.getElementById('chkAllZone') ||
+                Array.from(document.querySelectorAll('input[type=\"checkbox\"]')).find(cb => {
+                    const label = cb.nextElementSibling || cb.parentElement;
+                    return label && label.textContent.includes('Zone');
+                });
             if (zoneBtn && !zoneBtn.checked) zoneBtn.click();
         });
         await new Promise(r => setTimeout(r, 2000));
@@ -203,7 +207,7 @@ async function runSalesSyncV2() {
             const lines = text.split('\n');
             // Dynamically find the header row by searching for specific column names
             const headerIndex = lines.findIndex(l => l.includes('RegionName,StoreName') || l.includes('BillDate,BillNumber'));
-            
+
             if (headerIndex !== -1) {
                 const headerLine = lines[headerIndex];
                 console.log(`📋 HEADER DETECTED (Line ${headerIndex + 1}): ${headerLine.substring(0, 100)}...`);
@@ -211,7 +215,7 @@ async function runSalesSyncV2() {
                 const cleanText = lines.slice(headerIndex).join('\n');
                 const stream = Readable.from([cleanText]);
                 console.log(`🚀 Starting database push for ${fileName}...`);
-                
+
                 const { inserted } = await saveStreamToDatabase(stream, 'chumbak_ebo_sales', { quote: '' });
                 console.log(`🎉 Success! Synced ${inserted} rows to "chumbak_ebo_sales".`);
 
@@ -227,7 +231,7 @@ async function runSalesSyncV2() {
                 console.error("❌ Could not find valid header row in CSV!");
                 console.log("First 20 lines of CSV for debug:", lines.slice(0, 20).join('\n'));
             }
-            
+
             if (fs.existsSync('captured_sales.csv')) fs.unlinkSync('captured_sales.csv');
         } else {
             console.error("❌ Download timed out");

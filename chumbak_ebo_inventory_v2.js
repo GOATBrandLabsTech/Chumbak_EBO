@@ -1,19 +1,23 @@
+require('dotenv').config({
+    path: '/home/ubuntu/project/Chumbak_EBO/.env',
+    override: true
+});
+
 const puppeteer = require('puppeteer');
 const chromium = require('chromium');
 const fetch = require('node-fetch');
 const { saveStreamToDatabase, closePool } = require('./chumbak_db_utils');
 const { Readable } = require('stream');
-require('dotenv').config();
 
 function getChumbakTimestamp() {
-  const d = new Date();
-  const date = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-  let hours = d.getHours();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12; hours = hours ? hours : 12;
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const seconds = String(d.getSeconds()).padStart(2, '0');
-  return `${date} ${hours}:${minutes}:${seconds} ${ampm}`;
+    const d = new Date();
+    const date = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+    let hours = d.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12; hours = hours ? hours : 12;
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${date} ${hours}:${minutes}:${seconds} ${ampm}`;
 }
 
 async function runInventorySyncV2() {
@@ -34,7 +38,7 @@ async function runInventorySyncV2() {
         headless: true,
         executablePath: chromium.path,
         args: [
-            '--no-sandbox', 
+            '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-accelerated-2d-canvas',
@@ -130,7 +134,7 @@ async function runInventorySyncV2() {
 
         const prodChecked = await reportTarget.$eval('#chkAllProducts', el => el.checked);
         if (!prodChecked) await reportTarget.click('#chkAllProducts');
-        
+
         console.log("📊 Selecting 'Detail' view...");
         await reportTarget.select('#ddlOption', '1');
 
@@ -144,7 +148,7 @@ async function runInventorySyncV2() {
         const path = require('path');
         const downloadPath = path.resolve(__dirname, 'downloads');
         if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath);
-        
+
         // Clear previous downloads
         fs.readdirSync(downloadPath).forEach(file => fs.unlinkSync(path.join(downloadPath, file)));
 
@@ -156,9 +160,9 @@ async function runInventorySyncV2() {
         });
 
         console.log("🖱️ Clicking 'Download CSV' button...");
-        const downloadBtn = await reportTarget.$('input[value*="Download"]') || 
-                           await reportTarget.$('input[value*="CSV"]') ||
-                           await reportTarget.$('#btnExport');
+        const downloadBtn = await reportTarget.$('input[value*="Download"]') ||
+            await reportTarget.$('input[value*="CSV"]') ||
+            await reportTarget.$('#btnExport');
 
         if (!downloadBtn) throw new Error("Could not find download button.");
         await downloadBtn.click();
@@ -181,10 +185,10 @@ async function runInventorySyncV2() {
             const fullPath = path.join(downloadPath, fileName);
             console.log(`✅ File downloaded: ${fileName} (${fs.statSync(fullPath).size} bytes)`);
             const text = fs.readFileSync(fullPath, 'utf8');
-            
+
             const tableName = "chumbak_ebo_inventory";
             console.log(`🚀 Pushing data to table "DataWarehouse".${tableName}...`);
-            
+
             const { Pool } = require('pg');
             const pool = new Pool({
                 user: process.env.DB_USER, host: process.env.DB_HOST,
@@ -203,7 +207,7 @@ async function runInventorySyncV2() {
             const stream = Readable.from([cleanText]);
             const { inserted } = await saveStreamToDatabase(stream, tableName, { quote: '' });
             console.log(`🎉 Success! Captured ${inserted} stock records.`);
-            
+
             // Cleanup
             fs.unlinkSync(fullPath);
         } else {
