@@ -9,7 +9,13 @@ This folder contains the automated pipeline for ingesting Chumbak eShopaid sales
    npm install
    ```
 
-2. **Setup Environment**:
+2. **EC2/Linux Setup** (Run if deploying on a fresh AWS instance):
+   ```bash
+   npm run setup-linux
+   ```
+   *This installs the necessary shared libraries for Chromium to run on Ubuntu/Debian.*
+
+3. **Setup Environment**:
    - Copy `.env.example` to `.env`.
    - Fill in your PostgreSQL/RDS credentials.
 

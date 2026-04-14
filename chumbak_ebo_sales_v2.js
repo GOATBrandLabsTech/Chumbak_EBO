@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const chromium = require('chromium');
 const fetch = require('node-fetch');
 const { saveStreamToDatabase, closePool, deleteDateFromTable } = require('./chumbak_db_utils');
 const { Readable } = require('stream');
@@ -22,6 +23,7 @@ async function runSalesSyncV2() {
 
     const browser = await puppeteer.launch({
         headless: true,
+        executablePath: chromium.path,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
     const page = await browser.newPage();
