@@ -83,6 +83,8 @@ async function saveStreamToDatabase(stream, targetTable = 'chumbak_ebo_sales', p
                 firstRowProcessed = true;
             }
 
+            if (!data['BillDate'] || data['BillDate'].trim() === '') continue;
+
             const rowValues = headers.map(h => {
                 let val = data[h];
                 if (typeof val === 'string') {
