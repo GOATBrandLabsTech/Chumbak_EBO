@@ -216,7 +216,7 @@ async function runSalesSyncV2() {
                 const stream = Readable.from([cleanText]);
                 console.log(`🚀 Starting database push for ${fileName}...`);
 
-                const { inserted } = await saveStreamToDatabase(stream, 'chumbak_ebo_sales', { quote: '' });
+                const { inserted } = await saveStreamToDatabase(stream, 'chumbak_ebo_sales');
                 console.log(`🎉 Success! Synced ${inserted} rows to "chumbak_ebo_sales".`);
 
                 // Cleanup on success
