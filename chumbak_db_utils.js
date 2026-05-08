@@ -91,6 +91,10 @@ async function saveStreamToDatabase(stream, targetTable = 'chumbak_ebo_sales', p
                         val = val.substring(1, val.length - 1);
                     }
                     if (h === 'EANCode' && val.startsWith("'")) val = val.substring(1);
+                    if (h === 'BillDate' && /^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+                        const [dd, mm, yyyy] = val.split('/');
+                        val = `${yyyy}-${mm}-${dd}`;
+                    }
                 }
                 return val;
             });
