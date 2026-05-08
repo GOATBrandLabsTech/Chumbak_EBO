@@ -68,7 +68,7 @@ async function saveStreamToDatabase(stream, targetTable = 'chumbak_ebo_sales', p
 
     try {
         const streamReader = stream.pipe(csv(parserOptions));
-        
+
         for await (const data of streamReader) {
             // Process headers once
             if (!headers) {
@@ -86,11 +86,11 @@ async function saveStreamToDatabase(stream, targetTable = 'chumbak_ebo_sales', p
             const rowValues = headers.map(h => {
                 let val = data[h];
                 if (typeof val === 'string') {
-                    // Remove leading/trailing quotes if they exist
                     val = val.trim();
                     if (val.startsWith('"') && val.endsWith('"')) {
                         val = val.substring(1, val.length - 1);
                     }
+                    if (h === 'EANCode' && val.startsWith("'")) val = val.substring(1);
                 }
                 return val;
             });
