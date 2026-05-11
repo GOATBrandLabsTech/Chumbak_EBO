@@ -201,7 +201,10 @@ async function runInventorySyncV2() {
             await pool.end();
 
             const lines = text.split('\n');
+            console.log('[debug] First 10 lines of CSV:');
+            lines.slice(0, 10).forEach((l, i) => console.log(`  [${i}] ${l.substring(0, 120)}`));
             const headerIndex = lines.findIndex(l => l.includes('ItemCode') || l.includes('ProductCode') || l.includes('Barcode'));
+            console.log(`[debug] headerIndex: ${headerIndex}`);
             const cleanText = headerIndex !== -1 ? lines.slice(headerIndex).join('\n') : text;
 
             const stream = Readable.from([cleanText]);
