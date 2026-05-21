@@ -67,7 +67,7 @@ async function saveStreamToDatabase(stream, targetTable = 'chumbak_ebo_sales', p
     };
 
     try {
-        const streamReader = stream.pipe(csv(parserOptions));
+        const streamReader = stream.pipe(csv({ ...parserOptions, relaxQuotes: true }));
 
         for await (const data of streamReader) {
             // Process headers once

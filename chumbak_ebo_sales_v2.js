@@ -111,7 +111,7 @@ async function runSalesSyncV2() {
         const dd = String(d.getDate()).padStart(2, '0');
         const yyyy = d.getFullYear();
         const yesterday = `${dd}/${mm}/${yyyy}`;
-        const dbDate = `${dd}/${mm}/${yyyy}`; // For clearing from DB
+        const dbDate = `${yyyy}-${mm}-${dd}`; // For clearing from DB
 
         // Surgical clear: only remove data for yesterday to protect history
         await deleteDateFromTable(dbDate, 'chumbak_ebo_sales');
