@@ -1,5 +1,5 @@
 require('dotenv').config({
-    path: '/home/ubuntu/project/Chumbak_EBO/.env',
+    path: require('path').join(__dirname, '.env'),
     override: true
 });
 
@@ -35,7 +35,7 @@ async function runInventorySyncV2() {
     console.log("-----------------------------------------");
 
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         executablePath: chromium.path,
         args: [
             '--no-sandbox',
@@ -94,7 +94,11 @@ async function runInventorySyncV2() {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         console.log("📂 Navigating through menu: Reports...");
-        await page.click('#ctl00_IDASPxMenu_DXI3_T'); // Reports tab
+        await page.evaluate(() => {
+            const tabs = Array.from(document.querySelectorAll('li.dxm-item, .dxm-item span, td[id*="IDASPxMenu"]'));
+            const reportsTab = tabs.find(el => el.textContent.trim() === 'Reports' || el.textContent.includes('Reports'));
+            if (reportsTab) reportsTab.click();
+        });
 
         await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -106,8 +110,16 @@ async function runInventorySyncV2() {
         }
 
         console.log("📂 Clicking 'Stock Report >>' inside iframe...");
-        await mainFrame.waitForSelector('#Menu24', { timeout: 10000 });
-        await mainFrame.click('#Menu24');
+        // Wait for menu links to load in the frame before searching
+        await mainFrame.waitForSelector('a[href*="eShopaidMenu.aspx"]', { timeout: 10000 });
+        const clickedStockReport = await mainFrame.evaluate(() => {
+            const links = Array.from(document.querySelectorAll('a[href*="eShopaidMenu.aspx"]'));
+            const target = links.find(el => el.textContent.includes('Stock Report'));
+            if (target) { target.click(); return target.id || true; }
+            return false;
+        });
+        if (!clickedStockReport) throw new Error("Could not find 'Stock Report' link in main frame");
+        console.log(`✅ Clicked Stock Report (element: ${clickedStockReport})`);
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 

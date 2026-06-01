@@ -1,5 +1,5 @@
 require('dotenv').config({
-    path: '/home/ubuntu/project/Chumbak_EBO/.env',
+    path: require('path').join(__dirname, '.env'),
     override: true
 });
 
@@ -47,13 +47,25 @@ async function runSalesSyncV2() {
         await page.type('#txtPassword', password);
 
         console.log("🖱️ Clicking Login...");
-        const loginBtn = await page.$('#btnLogin') || await page.$('#btnProceed');
-        await loginBtn.click();
+        const loginBtn = await page.$('#btnLogin');
+        if (loginBtn) {
+            await loginBtn.click();
+            console.log("✅ Clicked #btnLogin");
+        } else {
+            const proceedLoginBtn = await page.$('#btnProceed');
+            if (proceedLoginBtn) {
+                await proceedLoginBtn.click();
+                console.log("✅ Clicked #btnProceed (login)");
+            } else {
+                throw new Error("No login button (#btnLogin or #btnProceed) found");
+            }
+        }
 
         try { await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 5000 }); } catch (e) { }
 
+        // Only click #btnProceed again if it reappears (store selection step after login)
         const proceedBtn = await page.$('#btnProceed');
-        if (proceedBtn) {
+        if (proceedBtn && await proceedBtn.isIntersectingViewport()) {
             console.log("🖱️ Clicking #btnProceed (Store selection)...");
             await proceedBtn.click();
             await page.waitForNavigation({ waitUntil: 'networkidle2' });

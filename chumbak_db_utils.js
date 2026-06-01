@@ -11,15 +11,25 @@ const pool = new Pool({
 });
 
 async function ensureTableExists(headers, targetTable) {
-    const columns = headers
-        .filter(h => h && h.trim() !== '')
-        .map(h => `"${h.trim()}" TEXT`)
-        .join(', ');
+    const cleanHeaders = headers.filter(h => h && h.trim() !== '');
 
-    const query = `CREATE TABLE IF NOT EXISTS "DataWarehouse".${targetTable} (
-        ${columns}
-    );`;
-    await pool.query(query);
+    // Create table if it doesn't exist
+    const columns = cleanHeaders.map(h => `"${h.trim()}" TEXT`).join(', ');
+    await pool.query(`CREATE TABLE IF NOT EXISTS "DataWarehouse".${targetTable} (${columns});`);
+
+    // Add any columns that are in the CSV but missing from the table
+    const existing = await pool.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_schema = 'DataWarehouse' AND table_name = $1`,
+        [targetTable]
+    );
+    const existingCols = new Set(existing.rows.map(r => r.column_name));
+    for (const h of cleanHeaders) {
+        if (!existingCols.has(h.trim())) {
+            await pool.query(`ALTER TABLE "DataWarehouse".${targetTable} ADD COLUMN IF NOT EXISTS "${h.trim()}" TEXT;`);
+            console.log(`[db] Added missing column "${h.trim()}" to ${targetTable}.`);
+        }
+    }
+
     console.log(`[db] Table "DataWarehouse".${targetTable} ensured.`);
 }
 
