@@ -35,7 +35,7 @@ async function runInventorySyncV2() {
     console.log("-----------------------------------------");
 
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         executablePath: chromium.path,
         args: [
             '--no-sandbox',
